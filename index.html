@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Bibliothèque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #3498db;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-book-open me-2"></i>BiblioTech</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('home')">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('books')">Livres</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('authors')">Auteurs</a>
+                    </li>
+                    <li class="nav-item" id="profileLink" style="display: none;">
+                        <a class="nav-link" href="#" onclick="showSection('profile')">Profil</a>
+                    </li>
+                    <li class="nav-item" id="loginLink">
+                        <a class="nav-link" href="#" onclick="showSection('login')">Connexion</a>
+                    </li>
+                    <li class="nav-item" id="registerLink">
+                        <a class="nav-link" href="#" onclick="showSection('register')">Inscription</a>
+                    </li>
+                    <li class="nav-item" id="logoutLink" style="display: none;">
+                        <a class="nav-link" href="#" onclick="logout()">Déconnexion</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="home" class="section">
+            <h1 class="text-center mb-4">Bienvenue sur BiblioTech</h1>
+            <p class="text-center">Explorez notre vaste collection de livres et découvrez de nouveaux auteurs.</p>
+        </div>
+
+        <div id="books" class="section" style="display: none;">
+            <h2 class="mb-4">Gestion des Livres</h2>
+            <div id="booksList" class="row"></div>
+            <button class="btn btn-primary mt-3" onclick="showBookForm()">Ajouter un livre</button>
+            <div id="bookForm" style="display: none;">
+                <h3>Ajouter un livre</h3>
+                <input type="text" id="bookTitle" placeholder="Titre" required />
+                <input type="number" id="bookYear" placeholder="Année" required />
+                <input type="text" id="bookGenre" placeholder="Genre" required />
+                <select id="bookAuthor" required></select> <!-- Sélecteur d'auteur -->
+                <button onclick="addBook()">Ajouter le livre</button>
+            </div>
+            
+        </div>
+        <div id="authors" class="section" style="display: none;">
+            <h2 class="mb-4">Gestion des Auteurs</h2>
+            <div id="authorsList" class="row"></div>
+            <button class="btn btn-primary mt-3" onclick="showAuthorForm()">Ajouter un auteur</button>
+            <div id="authorForm" style="display: none;">
+                <h3>Ajouter un auteur</h3>
+                <input type="text" id="authorName" placeholder="Nom" required />
+                <input type="text" id="authorBio" placeholder="Biographie" required />
+                <button onclick="addAuthor()">Ajouter</button>
+            </div>
+        </div>
+        
+        <div id="login" class="section" style="display: none;">
+            <h2 class="mb-4">Connexion</h2>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="loginEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="loginEmail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="loginPassword" class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </form>
+        </div>
+
+        <div id="register" class="section" style="display: none;">
+            <h2 class="mb-4">Inscription</h2>
+            <form id="registerForm">
+                <div class="mb-3">
+                    <label for="registerEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="registerEmail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="registerPassword" class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" id="registerPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label for="registerRole" class="form-label">Rôle</label>
+                    <select class="form-control" id="registerRole">
+                        <option value="utilisateur">Utilisateur</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">S'inscrire</button>
+            </form>
+        </div>
+
+        <div id="profile" class="section" style="display: none;">
+            <h2 class="mb-4">Profil Utilisateur</h2>
+            <form id="profileForm">
+                <div class="mb-3">
+                    <label for="profileEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="profileEmail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="profilePassword" class="form-label">Nouveau mot de passe (laisser vide si inchangé)</label>
+                    <input type="password" class="form-control" id="profilePassword">
+                </div>
+                <button type="submit" class="btn btn-primary">Mettre à jour le profil</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'https://gestion-bibliotheque-mm27.onrender.com/api';
+        let token = localStorage.getItem('token');
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            if (sectionId === 'books') {
+                getBooks();
+            } else if (sectionId === 'authors') {
+                getAuthors();
+            }
+        }
+
+        function showBookForm() {
+            document.getElementById('bookForm').style.display = 'block';
+        }
+
+        function showAuthorForm() {
+            document.getElementById('authorForm').style.display = 'block';
+        }
+
+        function updateNavbar() {
+            if (token) {
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('registerLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'block';
+            } else {
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('registerLink').style.display = 'block';
+                document.getElementById('profileLink').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            updateNavbar();
+            showSection('home');
+        }
+
+        // Fonction de connexion
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            try {
+                const response = await fetch(`${API_URL}/utilisateurs/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, motDePasse: password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    updateNavbar();
+                    showSection('home');
+                } else {
+                    alert(data.message || 'Erreur lors de la connexion');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la connexion:', error);
+            }
+        });
+
+        // Fonction d'inscription
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const role = document.getElementById('registerRole').value;
+            try {
+                const response = await fetch(`${API_URL}/utilisateurs/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, motDePasse: password, role })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
+                    showSection('login');
+                } else {
+                    alert(data.message || 'Erreur lors de l\'inscription');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'inscription:', error);
+            }
+        });
+
+        async function addBook() {
+    const book = {
+        titre: document.getElementById('bookTitle').value,
+        annee: document.getElementById('bookYear').value,
+        genre: document.getElementById('bookGenre').value,
+        auteurId: document.getElementById('bookAuthor').value // ID de l'auteur
+    };
+            try {
+                const response = await fetch(`${API_URL}/livres`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(book)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Livre ajouté avec succès !');
+                    document.getElementById('bookForm').reset();
+                    getBooks(); // Rafraîchir la liste des livres
+                } else {
+                    alert(data.message || 'Erreur lors de l\'ajout du livre');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout du livre:', error);
+            }
+        }
+
+        async function getBooks() {
+            try {
+                const response = await fetch(`${API_URL}/livres`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const books = await response.json();
+                const booksList = document.getElementById('booksList');
+                booksList.innerHTML = ''; // Effacer l'ancienne liste
+                books.forEach(book => {
+                    const bookCard = document.createElement('div');
+                    bookCard.className = 'col-md-4 mb-4';
+                    bookCard.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${book.titre}</h5>
+                                <p class="card-text">Année: ${book.annee} | Genre: ${book.genre}</p>
+                                <button class="btn btn-warning" onclick="editBook(${book.id})">Modifier</button>
+                                <button class="btn btn-danger" onclick="deleteBook(${book.id})">Supprimer</button>
+                            </div>
+                        </div>
+                    `;
+                    booksList.appendChild(bookCard);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des livres:', error);
+            }
+        }
+
+        async function editBook(bookId) {
+            const bookData = await fetch(`${API_URL}/livres/${bookId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const book = await bookData.json();
+            document.getElementById('bookForm').innerHTML = `
+                <h3>Modifier le livre</h3>
+                <input type="text" id="editBookTitle" value="${book.titre}" required />
+                <input type="number" id="editBookYear" value="${book.annee}" required />
+                <input type="text" id="editBookGenre" value="${book.genre}" required />
+                <button onclick="updateBook(${bookId})">Mettre à jour</button>
+            `;
+            document.getElementById('bookForm').style.display = 'block';
+        }
+
+        async function updateBook(bookId) {
+            const updatedBook = {
+                titre: document.getElementById('editBookTitle').value,
+                annee: document.getElementById('editBookYear').value,
+                genre: document.getElementById('editBookGenre').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/livres/${bookId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedBook)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Livre mis à jour avec succès !');
+                    getBooks(); // Rafraîchir la liste des livres
+                } else {
+                    alert(data.message || 'Erreur lors de la mise à jour du livre');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour du livre:', error);
+            }
+        }
+
+        async function deleteBook(bookId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce livre ?')) {
+                try {
+                    const response = await fetch(`${API_URL}/livres/${bookId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        alert('Livre supprimé avec succès !');
+                        getBooks(); // Rafraîchir la liste des livres
+                    } else {
+                        const data = await response.json();
+                        alert(data.message || 'Erreur lors de la suppression du livre');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la suppression du livre:', error);
+                }
+            }
+        }
+
+        // Gestion des auteurs
+        async function addAuthor() {
+            const author = {
+                nom: document.getElementById('authorName').value,
+                biographie: document.getElementById('authorBio').value
+            };
+            try {
+                const response = await fetch(`${API_URL}/auteurs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(author)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Auteur ajouté avec succès !');
+                    document.getElementById('authorForm').reset();
+                    getAuthors(); // Rafraîchir la liste des auteurs
+                } else {
+                    alert(data.message || 'Erreur lors de l\'ajout de l\'auteur');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout de l\'auteur:', error);
+            }
+        }
+
+        async function getAuthors() {
+    try {
+        const response = await fetch(`${API_URL}/auteurs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const authors = await response.json();
+        const authorsList = document.getElementById('authorsList');
+        authorsList.innerHTML = ''; // Effacer l'ancienne liste
+
+        authors.forEach(author => {
+            const authorCard = document.createElement('div');
+            authorCard.className = 'col-md-4 mb-4';
+            authorCard.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${author.nom}</h5>
+                        <p class="card-text">${author.biographie}</p>
+                        <button class="btn btn-warning" onclick="editAuthor(${author.id})">Modifier</button>
+                        <button class="btn btn-danger" onclick="deleteAuthor(${author.id})">Supprimer</button>
+                    </div>
+                </div>
+            `;
+            authorsList.appendChild(authorCard);
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des auteurs:', error);
+    }
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    if (sectionId === 'books') {
+        getBooks();
+    } else if (sectionId === 'authors') {
+        getAuthors(); // Appeler pour récupérer les auteurs
+    }
+}
+
+
+        async function editAuthor(authorId) {
+            const authorData = await fetch(`${API_URL}/auteurs/${authorId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const author = await authorData.json();
+            document.getElementById('authorForm').innerHTML = `
+                <h3>Modifier l'auteur</h3>
+                <input type="text" id="editAuthorName" value="${author.nom}" required />
+                <textarea id="editAuthorBio" required>${author.biographie}</textarea>
+                <button onclick="updateAuthor(${authorId})">Mettre à jour</button>
+            `;
+            document.getElementById('authorForm').style.display = 'block';
+        }
+
+        async function updateAuthor(authorId) {
+            const updatedAuthor = {
+                nom: document.getElementById('editAuthorName').value,
+                biographie: document.getElementById('editAuthorBio').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/auteurs/${authorId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedAuthor)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Auteur mis à jour avec succès !');
+                    getAuthors(); // Rafraîchir la liste des auteurs
+                } else {
+                    alert(data.message || 'Erreur lors de la mise à jour de l\'auteur');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour de l\'auteur:', error);
+            }
+        }
+
+        async function deleteAuthor(authorId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet auteur ?')) {
+                try {
+                    const response = await fetch(`${API_URL}/auteurs/${authorId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        alert('Auteur supprimé avec succès !');
+                        getAuthors(); // Rafraîchir la liste des auteurs
+                    } else {
+                        const data = await response.json();
+                        alert(data.message || 'Erreur lors de la suppression de l\'auteur');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la suppression de l\'auteur:', error);
+                }
+            }
+        }
+
+        updateNavbar();
+        getBooks();
+        getAuthors();
+        showSection('home');
+    </script>
+</body>
+</html>
