@@ -371,6 +371,30 @@
             }
         }
 
+        async function populateAuthorSelect() {
+    try {
+        const response = await fetch(`${API_URL}/auteurs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const authors = await response.json();
+        const authorSelect = document.getElementById('bookAuthor');
+        authorSelect.innerHTML = ''; // Effacer l'ancien contenu
+
+        authors.forEach(author => {
+            const option = document.createElement('option');
+            option.value = author.id; // L'ID de l'auteur
+            option.textContent = author.nom; // Le nom de l'auteur
+            authorSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des auteurs pour le sélecteur:', error);
+    }
+}
+
+
         // Gestion des auteurs
         async function addAuthor() {
             const author = {
@@ -436,8 +460,9 @@ function showSection(sectionId) {
     document.getElementById(sectionId).style.display = 'block';
     if (sectionId === 'books') {
         getBooks();
+        populateAuthorSelect(); // Remplir le sélecteur d'auteurs
     } else if (sectionId === 'authors') {
-        getAuthors(); // Appeler pour récupérer les auteurs
+        getAuthors();
     }
 }
 
