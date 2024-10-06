@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -9,6 +10,7 @@
     <style>
         body {
             background-color: #f8f9fa;
+            margin-bottom: 200px;
         }
         .navbar {
             background-color: #3498db;
@@ -69,6 +71,20 @@
         <div id="home" class="section">
             <h1 class="text-center mb-4">Bienvenue sur BiblioTech</h1>
             <p class="text-center">Explorez notre vaste collection de livres et découvrez de nouveaux auteurs.</p>
+
+            <!-- Tableau de la liste des livres -->
+            <h2 class="mt-4">Liste des livres</h2>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Livre</th>
+                        <th scope="col">Auteur</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTableBody">
+                    <!-- Les livres seront ajoutés ici dynamiquement -->
+                </tbody>
+            </table>
         </div>
 
         <div id="books" class="section" style="display: none;">
@@ -80,11 +96,12 @@
                 <input type="text" id="bookTitle" placeholder="Titre" required />
                 <input type="number" id="bookYear" placeholder="Année" required />
                 <input type="text" id="bookGenre" placeholder="Genre" required />
-                <select id="bookAuthor" required></select> <!-- Sélecteur d'auteur -->
+                <select id="bookAuthor" required></select>
                 <button onclick="addBook()">Ajouter le livre</button>
             </div>
-            
         </div>
+            
+    
         <div id="authors" class="section" style="display: none;">
             <h2 class="mb-4">Gestion des Auteurs</h2>
             <div id="authorsList" class="row"></div>
@@ -97,7 +114,8 @@
             </div>
         </div>
         
-        <div id="login" class="section" style="display: none;">
+         <!-- Formulaires de connexion et d'inscription -->
+         <div id="login" class="section" style="display: none;">
             <h2 class="mb-4">Connexion</h2>
             <form id="loginForm">
                 <div class="mb-3">
@@ -134,6 +152,7 @@
             </form>
         </div>
 
+
         <div id="profile" class="section" style="display: none;">
             <h2 class="mb-4">Profil Utilisateur</h2>
             <form id="profileForm">
@@ -155,47 +174,72 @@
         const API_URL = 'https://gestion-bibliotheque-mm27.onrender.com/api';
         let token = localStorage.getItem('token');
 
-        function showSection(sectionId) {
-            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-            document.getElementById(sectionId).style.display = 'block';
-            if (sectionId === 'books') {
-                getBooks();
-            } else if (sectionId === 'authors') {
-                getAuthors();
-            }
-        }
+       
 
-        function showBookForm() {
-            document.getElementById('bookForm').style.display = 'block';
+        async function fetchBooks() {
+    const response = await fetch(`${API_URL}/livres`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
         }
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération des livres');
+    return await response.json();
+}
 
-        function showAuthorForm() {
-            document.getElementById('authorForm').style.display = 'block';
+async function fetchAuthors() {
+    const response = await fetch(`${API_URL}/auteurs`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
         }
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération des auteurs');
+    return await response.json();
+}
 
-        function updateNavbar() {
-            if (token) {
-                document.getElementById('loginLink').style.display = 'none';
-                document.getElementById('registerLink').style.display = 'none';
-                document.getElementById('profileLink').style.display = 'block';
-                document.getElementById('logoutLink').style.display = 'block';
-            } else {
-                document.getElementById('loginLink').style.display = 'block';
-                document.getElementById('registerLink').style.display = 'block';
-                document.getElementById('profileLink').style.display = 'none';
-                document.getElementById('logoutLink').style.display = 'none';
-            }
-        }
+async function populateBooksTable() {
+    const books = await fetchBooks();
+    const authors = await fetchAuthors();
 
-        function logout() {
-            localStorage.removeItem('token');
-            token = null;
-            updateNavbar();
-            showSection('home');
-        }
+    if (!Array.isArray(books) || !Array.isArray(authors)) {
+        console.error('Les données récupérées ne sont pas des tableaux.');
+        return;
+    }
 
-        // Fonction de connexion
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    const booksTableBody = document.getElementById('booksTableBody');
+    booksTableBody.innerHTML = ''; // Vider le tableau avant d'ajouter des données
+
+    books.forEach(book => {
+        const author = authors.find(a => a.id === book.auteurId);
+        const row = `
+            <tr>
+                <td>${book.titre}</td>
+                <td>${author ? author.nom : 'Auteur non trouvé'}</td>
+            </tr>
+        `;
+        booksTableBody.innerHTML += row;
+    });
+}
+
+
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    
+    if (sectionId === 'home') {
+        populateBooksTable(); // Call to populate books on home
+    } else if (sectionId === 'books') {
+        getBooks();
+        populateAuthorSelect();
+    } else if (sectionId === 'authors') {
+        getAuthors();
+    }
+}
+       
+       // Fonction de connexion
+       document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -219,8 +263,8 @@
             }
         });
 
-        // Fonction d'inscription
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+       // Fonction d'inscription
+       document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
@@ -242,14 +286,13 @@
                 console.error('Erreur lors de l\'inscription:', error);
             }
         });
-
         async function addBook() {
-    const book = {
-        titre: document.getElementById('bookTitle').value,
-        annee: document.getElementById('bookYear').value,
-        genre: document.getElementById('bookGenre').value,
-        auteurId: document.getElementById('bookAuthor').value // ID de l'auteur
-    };
+            const book = {
+                titre: document.getElementById('bookTitle').value,
+                annee: document.getElementById('bookYear').value,
+                genre: document.getElementById('bookGenre').value,
+                auteurId: document.getElementById('bookAuthor').value
+            };
             try {
                 const response = await fetch(`${API_URL}/livres`, {
                     method: 'POST',
@@ -264,6 +307,7 @@
                     alert('Livre ajouté avec succès !');
                     document.getElementById('bookForm').reset();
                     getBooks(); // Rafraîchir la liste des livres
+                    populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                 } else {
                     alert(data.message || 'Erreur lors de l\'ajout du livre');
                 }
@@ -303,6 +347,7 @@
             }
         }
 
+
         async function editBook(bookId) {
             const bookData = await fetch(`${API_URL}/livres/${bookId}`, {
                 method: 'GET',
@@ -341,6 +386,7 @@
                 if (response.ok) {
                     alert('Livre mis à jour avec succès !');
                     getBooks(); // Rafraîchir la liste des livres
+                    populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                 } else {
                     alert(data.message || 'Erreur lors de la mise à jour du livre');
                 }
@@ -361,6 +407,7 @@
                     if (response.ok) {
                         alert('Livre supprimé avec succès !');
                         getBooks(); // Rafraîchir la liste des livres
+                        populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                     } else {
                         const data = await response.json();
                         alert(data.message || 'Erreur lors de la suppression du livre');
@@ -372,27 +419,27 @@
         }
 
         async function populateAuthorSelect() {
-    try {
-        const response = await fetch(`${API_URL}/auteurs`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const authors = await response.json();
-        const authorSelect = document.getElementById('bookAuthor');
-        authorSelect.innerHTML = ''; // Effacer l'ancien contenu
+            try {
+                const response = await fetch(`${API_URL}/auteurs`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const authors = await response.json();
+                const authorSelect = document.getElementById('bookAuthor');
+                authorSelect.innerHTML = ''; // Effacer l'ancien contenu
 
-        authors.forEach(author => {
-            const option = document.createElement('option');
-            option.value = author.id; // L'ID de l'auteur
-            option.textContent = author.nom; // Le nom de l'auteur
-            authorSelect.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Erreur lors de la récupération des auteurs pour le sélecteur:', error);
-    }
-}
+                authors.forEach(author => {
+                    const option = document.createElement('option');
+                    option.value = author.id; // L'ID de l'auteur
+                    option.textContent = author.nom; // Le nom de l'auteur
+                    authorSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des auteurs pour le sélecteur:', error);
+            }
+        }
 
 
         // Gestion des auteurs
@@ -415,6 +462,7 @@
                     alert('Auteur ajouté avec succès !');
                     document.getElementById('authorForm').reset();
                     getAuthors(); // Rafraîchir la liste des auteurs
+                    populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                 } else {
                     alert(data.message || 'Erreur lors de l\'ajout de l\'auteur');
                 }
@@ -427,18 +475,22 @@
     try {
         const response = await fetch(`${API_URL}/auteurs`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        const authors = await response.json();
-        const authorsList = document.getElementById('authorsList');
-        authorsList.innerHTML = ''; // Effacer l'ancienne liste
+        const data = await response.json();
 
-        authors.forEach(author => {
-            const authorCard = document.createElement('div');
-            authorCard.className = 'col-md-4 mb-4';
-            authorCard.innerHTML = `
+
+        if (!Array.isArray(data)) {
+            throw new Error('Les données des auteurs ne sont pas un tableau');
+        }
+
+        const authorsList = document.getElementById('authorsList');
+        authorsList.innerHTML = '';
+
+        data.forEach(author => {
+            const card = document.createElement('div');
+            card.className = 'col-md-4 mb-3';
+            card.innerHTML = `
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">${author.nom}</h5>
@@ -448,26 +500,17 @@
                     </div>
                 </div>
             `;
-            authorsList.appendChild(authorCard);
+            authorsList.appendChild(card);
         });
     } catch (error) {
-        console.error('Erreur lors de la récupération des auteurs:', error);
-    }
-}
-
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-    document.getElementById(sectionId).style.display = 'block';
-    if (sectionId === 'books') {
-        getBooks();
-        populateAuthorSelect(); // Remplir le sélecteur d'auteurs
-    } else if (sectionId === 'authors') {
-        getAuthors();
+        console.error(error);
+        alert('Une erreur s\'est produite lors de la récupération des auteurs.');
     }
 }
 
 
-        async function editAuthor(authorId) {
+
+async function editAuthor(authorId) {
             const authorData = await fetch(`${API_URL}/auteurs/${authorId}`, {
                 method: 'GET',
                 headers: {
@@ -478,11 +521,12 @@ function showSection(sectionId) {
             document.getElementById('authorForm').innerHTML = `
                 <h3>Modifier l'auteur</h3>
                 <input type="text" id="editAuthorName" value="${author.nom}" required />
-                <textarea id="editAuthorBio" required>${author.biographie}</textarea>
+                <input type="text" id="editAuthorBio" value="${author.biographie}" required />
                 <button onclick="updateAuthor(${authorId})">Mettre à jour</button>
             `;
             document.getElementById('authorForm').style.display = 'block';
         }
+
 
         async function updateAuthor(authorId) {
             const updatedAuthor = {
@@ -503,6 +547,7 @@ function showSection(sectionId) {
                 if (response.ok) {
                     alert('Auteur mis à jour avec succès !');
                     getAuthors(); // Rafraîchir la liste des auteurs
+                    populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                 } else {
                     alert(data.message || 'Erreur lors de la mise à jour de l\'auteur');
                 }
@@ -510,7 +555,8 @@ function showSection(sectionId) {
                 console.error('Erreur lors de la mise à jour de l\'auteur:', error);
             }
         }
-
+        
+        
         async function deleteAuthor(authorId) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet auteur ?')) {
                 try {
@@ -523,6 +569,7 @@ function showSection(sectionId) {
                     if (response.ok) {
                         alert('Auteur supprimé avec succès !');
                         getAuthors(); // Rafraîchir la liste des auteurs
+                        populateBooksTable(); // Mettre à jour le tableau sur la page d'accueil
                     } else {
                         const data = await response.json();
                         alert(data.message || 'Erreur lors de la suppression de l\'auteur');
@@ -531,6 +578,37 @@ function showSection(sectionId) {
                     console.error('Erreur lors de la suppression de l\'auteur:', error);
                 }
             }
+        }
+
+
+        function showBookForm() {
+            document.getElementById('bookForm').style.display = 'block';
+        }
+
+        function showAuthorForm() {
+            document.getElementById('authorForm').style.display = 'block';
+        }
+
+
+        function updateNavbar() {
+            if (token) {
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('registerLink').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('profileLink').style.display = 'block';
+            } else {
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('registerLink').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            updateNavbar();
+            showSection('home');
         }
 
         updateNavbar();
